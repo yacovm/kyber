@@ -25,95 +25,95 @@ import (
 var marshalScalarID = [8]byte{'e', 'd', '.', 's', 'c', 'a', 'l', 'a'}
 var defaultEndianess = kyber.LittleEndian
 
-type scalar struct {
+type Scalar struct {
 	v [32]byte
 }
 
 // Equality test for two Scalars derived from the same Group
-func (s *scalar) Equal(s2 kyber.Scalar) bool {
+func (s *Scalar) Equal(s2 kyber.Scalar) bool {
 	v1 := s.v[:]
-	v2 := s2.(*scalar).v[:]
+	v2 := s2.(*Scalar).v[:]
 	return subtle.ConstantTimeCompare(v1, v2) != 0
 }
 
 // Set equal to another Scalar a
-func (s *scalar) Set(a kyber.Scalar) kyber.Scalar {
-	s.v = a.(*scalar).v
+func (s *Scalar) Set(a kyber.Scalar) kyber.Scalar {
+	s.v = a.(*Scalar).v
 	return s
 }
 
-// Clone returns a duplicate of the scalar s.
-func (s *scalar) Clone() kyber.Scalar {
+// Clone returns a duplicate of the Scalar s.
+func (s *Scalar) Clone() kyber.Scalar {
 	s2 := *s
 	return &s2
 }
 
-func (s *scalar) setInt(i *mod.Int) kyber.Scalar {
+func (s *Scalar) setInt(i *mod.Int) kyber.Scalar {
 	b := i.LittleEndian(32, 32)
 	copy(s.v[:], b)
 	return s
 }
 
-// SetInt64 sets the scalar to a small integer value.
-func (s *scalar) SetInt64(v int64) kyber.Scalar {
+// SetInt64 sets the Scalar to a small integer value.
+func (s *Scalar) SetInt64(v int64) kyber.Scalar {
 	return s.setInt(mod.NewInt64(v, primeOrder))
 }
 
-func (s *scalar) toInt() *mod.Int {
+func (s *Scalar) toInt() *mod.Int {
 	return mod.NewIntBytes(s.v[:], primeOrder, defaultEndianess)
 }
 
 // Set to the additive identity (0)
-func (s *scalar) Zero() kyber.Scalar {
+func (s *Scalar) Zero() kyber.Scalar {
 	s.v = [32]byte{0}
 	return s
 }
 
 // Set to the multiplicative identity (1)
-func (s *scalar) One() kyber.Scalar {
+func (s *Scalar) One() kyber.Scalar {
 	s.v = [32]byte{1}
 	return s
 }
 
 // Set to the modular sum of scalars a and b
-func (s *scalar) Add(a, b kyber.Scalar) kyber.Scalar {
-	scAdd(&s.v, &a.(*scalar).v, &b.(*scalar).v)
+func (s *Scalar) Add(a, b kyber.Scalar) kyber.Scalar {
+	scAdd(&s.v, &a.(*Scalar).v, &b.(*Scalar).v)
 	return s
 }
 
 // Set to the modular difference a - b
-func (s *scalar) Sub(a, b kyber.Scalar) kyber.Scalar {
-	scSub(&s.v, &a.(*scalar).v, &b.(*scalar).v)
+func (s *Scalar) Sub(a, b kyber.Scalar) kyber.Scalar {
+	scSub(&s.v, &a.(*Scalar).v, &b.(*Scalar).v)
 	return s
 }
 
-// Set to the modular negation of scalar a
-func (s *scalar) Neg(a kyber.Scalar) kyber.Scalar {
-	var z scalar
+// Set to the modular negation of Scalar a
+func (s *Scalar) Neg(a kyber.Scalar) kyber.Scalar {
+	var z Scalar
 	z.Zero()
-	scSub(&s.v, &z.v, &a.(*scalar).v)
+	scSub(&s.v, &z.v, &a.(*Scalar).v)
 	return s
 }
 
 // Set to the modular product of scalars a and b
-func (s *scalar) Mul(a, b kyber.Scalar) kyber.Scalar {
-	scMul(&s.v, &a.(*scalar).v, &b.(*scalar).v)
+func (s *Scalar) Mul(a, b kyber.Scalar) kyber.Scalar {
+	scMul(&s.v, &a.(*Scalar).v, &b.(*Scalar).v)
 	return s
 }
 
-// Set to the modular division of scalar a by scalar b
-func (s *scalar) Div(a, b kyber.Scalar) kyber.Scalar {
-	var i scalar
+// Set to the modular division of Scalar a by Scalar b
+func (s *Scalar) Div(a, b kyber.Scalar) kyber.Scalar {
+	var i Scalar
 	i.Inv(b)
-	scMul(&s.v, &a.(*scalar).v, &i.v)
+	scMul(&s.v, &a.(*Scalar).v, &i.v)
 	return s
 }
 
-// Set to the modular inverse of scalar a
-func (s *scalar) Inv(a kyber.Scalar) kyber.Scalar {
-	var res scalar
+// Set to the modular inverse of Scalar a
+func (s *Scalar) Inv(a kyber.Scalar) kyber.Scalar {
+	var res Scalar
 	res.One()
-	ac := a.(*scalar) //nolint:errcheck // Design pattern to emulate generics
+	ac := a.(*Scalar) //nolint:errcheck // Design pattern to emulate generics
 	// Modular inversion in a multiplicative group is a^(phi(m)-1) = a^-1 mod m
 	// Since m is prime, phi(m) = m - 1 => a^(m-2) = a^-1 mod m.
 	// The inverse is computed using the exponentation-and-square algorithm.
@@ -132,29 +132,29 @@ func (s *scalar) Inv(a kyber.Scalar) kyber.Scalar {
 	return s
 }
 
-// Set to a fresh random or pseudo-random scalar
-func (s *scalar) Pick(rand cipher.Stream) kyber.Scalar {
+// Set to a fresh random or pseudo-random Scalar
+func (s *Scalar) Pick(rand cipher.Stream) kyber.Scalar {
 	i := mod.NewInt(random.Int(primeOrder, rand), primeOrder)
 	return s.setInt(i)
 }
 
 // SetBytes s to b, interpreted as a little endian integer.
-func (s *scalar) SetBytes(b []byte) kyber.Scalar {
+func (s *Scalar) SetBytes(b []byte) kyber.Scalar {
 	return s.setInt(mod.NewIntBytes(b, primeOrder, defaultEndianess))
 }
 
 // ByteOrder return the byte representation type (big or little endian)
-func (s *scalar) ByteOrder() kyber.ByteOrder {
+func (s *Scalar) ByteOrder() kyber.ByteOrder {
 	return defaultEndianess
 }
 
 // GroupOrder returns the order of the underlying group
-func (s *scalar) GroupOrder() *big.Int {
+func (s *Scalar) GroupOrder() *big.Int {
 	return big.NewInt(0).SetBytes(primeOrder.Bytes())
 }
 
-// String returns the string representation of this scalar (fixed length of 32 bytes, little endian).
-func (s *scalar) String() string {
+// String returns the string representation of this Scalar (fixed length of 32 bytes, little endian).
+func (s *Scalar) String() string {
 	b, _ := s.toInt().MarshalBinary()
 	for len(b) < 32 {
 		b = append(b, 0)
@@ -163,22 +163,22 @@ func (s *scalar) String() string {
 }
 
 // Encoded length of this object in bytes.
-func (s *scalar) MarshalSize() int {
+func (s *Scalar) MarshalSize() int {
 	return 32
 }
 
-// MarshalBinary returns the binary representation of this scalar.
-func (s *scalar) MarshalBinary() ([]byte, error) {
+// MarshalBinary returns the binary representation of this Scalar.
+func (s *Scalar) MarshalBinary() ([]byte, error) {
 	return s.toInt().MarshalBinary()
 }
 
 // MarshalID returns the type tag used in encoding/decoding
-func (s *scalar) MarshalID() [8]byte {
+func (s *Scalar) MarshalID() [8]byte {
 	return marshalScalarID
 }
 
-// UnmarshalBinary reads the binary representation of a scalar.
-func (s *scalar) UnmarshalBinary(buf []byte) error {
+// UnmarshalBinary reads the binary representation of a Scalar.
+func (s *Scalar) UnmarshalBinary(buf []byte) error {
 	if len(buf) != 32 {
 		return errors.New("wrong size buffer")
 	}
@@ -186,20 +186,20 @@ func (s *scalar) UnmarshalBinary(buf []byte) error {
 	return nil
 }
 
-// MarshalTo writes the binary representation of this scalar to the given
+// MarshalTo writes the binary representation of this Scalar to the given
 // writer.
-func (s *scalar) MarshalTo(w io.Writer) (int, error) {
+func (s *Scalar) MarshalTo(w io.Writer) (int, error) {
 	return marshalling.ScalarMarshalTo(s, w)
 }
 
-// UnmarshalFrom reads the binary representation of a scalar from the given
+// UnmarshalFrom reads the binary representation of a Scalar from the given
 // reader.
-func (s *scalar) UnmarshalFrom(r io.Reader) (int, error) {
+func (s *Scalar) UnmarshalFrom(r io.Reader) (int, error) {
 	return marshalling.ScalarUnmarshalFrom(s, r)
 }
 
-func newScalarInt(i *big.Int) *scalar {
-	s := scalar{}
+func newScalarInt(i *big.Int) *Scalar {
+	s := Scalar{}
 	s.setInt(mod.NewInt(i, fullOrder))
 	return &s
 }
@@ -2251,7 +2251,7 @@ func scReduce(out *[32]byte, s *[64]byte) {
 	out[31] = byte(s11 >> 17)
 }
 
-// IsCanonical whether the scalar in sb is in the range 0<=s<L as required by RFC8032, Section 5.1.7.
+// IsCanonical whether the Scalar in sb is in the range 0<=s<L as required by RFC8032, Section 5.1.7.
 // Also provides Strong Unforgeability under Chosen Message Attacks (SUF-CMA)
 // See paper https://eprint.iacr.org/2020/823.pdf for definitions and theorems
 // See https://github.com/jedisct1/libsodium/blob/4744636721d2e420f8bbe2d563f31b1f5e682229/src/libsodium/crypto_core/ed25519/ref10/ed25519_ref10.c#L2568
@@ -2260,7 +2260,7 @@ func scReduce(out *[32]byte, s *[64]byte) {
 // always returns values modulo `primeOrder`.
 //
 //nolint:lll // Url above
-func (s *scalar) IsCanonical(sb []byte) bool {
+func (s *Scalar) IsCanonical(sb []byte) bool {
 	if len(sb) != 32 {
 		return false
 	}

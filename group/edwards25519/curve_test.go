@@ -19,7 +19,7 @@ func TestCurve_NewKey(t *testing.T) {
 	stream := tSuite.RandomStream()
 
 	for i := 0.0; i < math.Pow(10, 6); i++ {
-		s := group.NewKey(stream).(*scalar)
+		s := group.NewKey(stream).(*Scalar)
 
 		// little-endian check of a multiple of 8
 		assert.Equal(t, uint8(0), s.v[0]&7)

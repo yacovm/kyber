@@ -35,7 +35,7 @@ var (
 )
 
 func TestPointMarshal(t *testing.T) {
-	p := point{}
+	p := Point{}
 	require.Equal(t, "ed.point", fmt.Sprintf("%s", p.MarshalID()))
 }
 
@@ -43,7 +43,7 @@ func TestPointMarshal(t *testing.T) {
 // a small order
 func TestPointHasSmallOrder(t *testing.T) {
 	for _, key := range weakKeys {
-		p := point{}
+		p := Point{}
 		err := p.UnmarshalBinary(key)
 		require.Nil(t, err)
 		require.True(t, p.HasSmallOrder(), fmt.Sprintf("%s should be considered to have a small order", hex.EncodeToString(key)))
@@ -62,14 +62,14 @@ func TestPointIsCanonical(t *testing.T) {
 	}
 
 	// Iterate over the 19*2 finite field elements
-	point := point{}
+	point := Point{}
 	actualNonCanonicalCount := 0
 	expectedNonCanonicalCount := 24
 	for i := 0; i < 19; i++ {
 		buffer[0] = byte(237 + i)
 		buffer[31] = byte(127)
 
-		// Check if it's a valid point on the curve that's
+		// Check if it's a valid Point on the curve that's
 		// not canonical
 		err := point.UnmarshalBinary(buffer)
 		if err == nil && !point.IsCanonical(buffer) {
@@ -79,7 +79,7 @@ func TestPointIsCanonical(t *testing.T) {
 		// flip bit
 		buffer[31] |= 128
 
-		// Check if it's a valid point on the curve that's
+		// Check if it's a valid Point on the curve that's
 		// not canonical
 		err = point.UnmarshalBinary(buffer)
 		if err == nil && !point.IsCanonical(buffer) {
@@ -324,7 +324,7 @@ func TestHashToField(t *testing.T) {
 }
 
 func TestHashToPoint(t *testing.T) {
-	p := new(point)
+	p := new(Point)
 
 	dst := "QUUX-V01-CS02-with-edwards25519_XMD:SHA-512_ELL2_RO_"
 	expectedPoints := []string{

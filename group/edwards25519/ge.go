@@ -288,7 +288,7 @@ func (r *cachedGroupElement) Neg(t *cachedGroupElement) {
 // Expand the 32-byte (256-bit) exponent in slice a into
 // a sequence of 256 multipliers, one per exponent bit position.
 // Clumps nearby 1 bits into multi-bit multipliers to reduce
-// the total number of add/sub operations in a point multiply;
+// the total number of add/sub operations in a Point multiply;
 // each multiplier is either zero or an odd number between -15 and 15.
 // Assumes the target array r has been preinitialized with zeros
 // in case the input slice a is less than 32 bytes.
@@ -364,7 +364,7 @@ func selectPreComputed(t *preComputedGroupElement, pos int32, b int32) {
 // geScalarMultBase computes h = a*B, where
 //
 //	a = a[0]+256*a[1]+...+256^31 a[31]
-//	B is the Ed25519 base point (x,4/5) with x positive.
+//	B is the Ed25519 base Point (x,4/5) with x positive.
 //
 // Preconditions:
 //
@@ -434,7 +434,7 @@ func selectCached(c *cachedGroupElement, Ai *[8]cachedGroupElement, b int32) {
 // geScalarMult computes h = a*B, where
 //
 //	a = a[0]+256*a[1]+...+256^31 a[31]
-//	B is the Ed25519 base point (x,4/5) with x positive.
+//	B is the Ed25519 base Point (x,4/5) with x positive.
 //
 // Preconditions:
 //

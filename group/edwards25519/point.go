@@ -33,53 +33,53 @@ import (
 var marshalPointID = [8]byte{'e', 'd', '.', 'p', 'o', 'i', 'n', 't'}
 var longDomainSeparator = "H2C-OVERSIZE-DST-"
 
-type point struct {
+type Point struct {
 	ge      extendedGroupElement
 	varTime bool
 }
 
-func (P *point) String() string {
+func (P *Point) String() string {
 	var b [32]byte
 	P.ge.ToBytes(&b)
 	return hex.EncodeToString(b[:])
 }
 
-func (P *point) MarshalSize() int {
+func (P *Point) MarshalSize() int {
 	return 32
 }
 
-func (P *point) MarshalBinary() ([]byte, error) {
+func (P *Point) MarshalBinary() ([]byte, error) {
 	var b [32]byte
 	P.ge.ToBytes(&b)
 	return b[:], nil
 }
 
 // MarshalID returns the type tag used in encoding/decoding
-func (P *point) MarshalID() [8]byte {
+func (P *Point) MarshalID() [8]byte {
 	return marshalPointID
 }
 
-func (P *point) UnmarshalBinary(b []byte) error {
+func (P *Point) UnmarshalBinary(b []byte) error {
 	if !P.ge.FromBytes(b) {
-		return errors.New("invalid Ed25519 curve point")
+		return errors.New("invalid Ed25519 curve Point")
 	}
 	return nil
 }
 
-func (P *point) MarshalTo(w io.Writer) (int, error) {
+func (P *Point) MarshalTo(w io.Writer) (int, error) {
 	return marshalling.PointMarshalTo(P, w)
 }
 
-func (P *point) UnmarshalFrom(r io.Reader) (int, error) {
+func (P *Point) UnmarshalFrom(r io.Reader) (int, error) {
 	return marshalling.PointUnmarshalFrom(P, r)
 }
 
 // Equality test for two Points on the same curve
-func (P *point) Equal(P2 kyber.Point) bool {
+func (P *Point) Equal(P2 kyber.Point) bool {
 
 	var b1, b2 [32]byte
 	P.ge.ToBytes(&b1)
-	P2.(*point).ge.ToBytes(&b2)
+	P2.(*Point).ge.ToBytes(&b2)
 	for i := range b1 {
 		if b1[i] != b2[i] {
 			return false
@@ -88,37 +88,37 @@ func (P *point) Equal(P2 kyber.Point) bool {
 	return true
 }
 
-// Set point to be equal to P2.
-func (P *point) Set(P2 kyber.Point) kyber.Point {
-	P.ge = P2.(*point).ge
+// Set Point to be equal to P2.
+func (P *Point) Set(P2 kyber.Point) kyber.Point {
+	P.ge = P2.(*Point).ge
 	return P
 }
 
-// Set point to be equal to P2.
-func (P *point) Clone() kyber.Point {
-	return &point{ge: P.ge}
+// Set Point to be equal to P2.
+func (P *Point) Clone() kyber.Point {
+	return &Point{ge: P.ge}
 }
 
 // Set to the neutral element, which is (0,1) for twisted Edwards curves.
-func (P *point) Null() kyber.Point {
+func (P *Point) Null() kyber.Point {
 	P.ge.Zero()
 	return P
 }
 
-// Set to the standard base point for this curve
-func (P *point) Base() kyber.Point {
+// Set to the standard base Point for this curve
+func (P *Point) Base() kyber.Point {
 	P.ge = baseext
 	return P
 }
 
-func (P *point) EmbedLen() int {
+func (P *Point) EmbedLen() int {
 	// Reserve the most-significant 8 bits for pseudo-randomness.
 	// Reserve the least-significant 8 bits for embedded data length.
 	// (Hopefully it's unlikely we'll need >=2048-bit curves soon.)
 	return (255 - 8 - 8) / 8
 }
 
-func (P *point) Embed(data []byte, rand cipher.Stream) kyber.Point {
+func (P *Point) Embed(data []byte, rand cipher.Stream) kyber.Point {
 
 	// How many bytes to embed?
 	dl := P.EmbedLen()
@@ -127,7 +127,7 @@ func (P *point) Embed(data []byte, rand cipher.Stream) kyber.Point {
 	}
 
 	for {
-		// Pick a random point, with optional embedded data
+		// Pick a random Point, with optional embedded data
 		var b [32]byte
 		rand.XORKeyStream(b[:], b[:])
 		if data != nil {
@@ -135,19 +135,19 @@ func (P *point) Embed(data []byte, rand cipher.Stream) kyber.Point {
 			copy(b[1:1+dl], data) // Copy in data to embed
 		}
 		if !P.ge.FromBytes(b[:]) { // Try to decode
-			continue // invalid point, retry
+			continue // invalid Point, retry
 		}
 
 		// If we're using the full group,
-		// we just need any point on the curve, so we're done.
+		// we just need any Point on the curve, so we're done.
 		//		if c.full {
 		//			return P,data[dl:]
 		//		}
 
 		// We're using the prime-order subgroup,
-		// so we need to make sure the point is in that subencoding.
+		// so we need to make sure the Point is in that subencoding.
 		// If we're not trying to embed data,
-		// we can convert our point into one in the subgroup
+		// we can convert our Point into one in the subgroup
 		// simply by multiplying it by the cofactor.
 		if data == nil {
 			P.Mul(cofactorScalar, P) // multiply by cofactor
@@ -157,10 +157,10 @@ func (P *point) Embed(data []byte, rand cipher.Stream) kyber.Point {
 			return P // success
 		}
 
-		// Since we need the point's y-coordinate to hold our data,
-		// we must simply check if the point is in the subgroup
-		// and retry point generation until it is.
-		var Q point
+		// Since we need the Point's y-coordinate to hold our data,
+		// we must simply check if the Point is in the subgroup
+		// and retry Point generation until it is.
+		var Q Point
 		Q.Mul(primeOrderScalar, P)
 		if Q.Equal(nullPoint) {
 			return P // success
@@ -169,12 +169,12 @@ func (P *point) Embed(data []byte, rand cipher.Stream) kyber.Point {
 	}
 }
 
-func (P *point) Pick(rand cipher.Stream) kyber.Point {
+func (P *Point) Pick(rand cipher.Stream) kyber.Point {
 	return P.Embed(nil, rand)
 }
 
-// Extract embedded data from a point group element
-func (P *point) Data() ([]byte, error) {
+// Extract embedded data from a Point group element
+func (P *Point) Data() ([]byte, error) {
 	var b [32]byte
 	P.ge.ToBytes(&b)
 	dl := int(b[0]) // extract length byte
@@ -184,9 +184,9 @@ func (P *point) Data() ([]byte, error) {
 	return b[1 : 1+dl], nil
 }
 
-func (P *point) Add(P1, P2 kyber.Point) kyber.Point {
-	E1 := P1.(*point) //nolint:errcheck // Design pattern to emulate generics
-	E2 := P2.(*point) //nolint:errcheck // Design pattern to emulate generics
+func (P *Point) Add(P1, P2 kyber.Point) kyber.Point {
+	E1 := P1.(*Point) //nolint:errcheck // Design pattern to emulate generics
+	E2 := P2.(*Point) //nolint:errcheck // Design pattern to emulate generics
 
 	var t2 cachedGroupElement
 	var r completedGroupElement
@@ -198,9 +198,9 @@ func (P *point) Add(P1, P2 kyber.Point) kyber.Point {
 	return P
 }
 
-func (P *point) Sub(P1, P2 kyber.Point) kyber.Point {
-	E1 := P1.(*point) //nolint:errcheck // Design pattern to emulate generics
-	E2 := P2.(*point) //nolint:errcheck // Design pattern to emulate generics
+func (P *Point) Sub(P1, P2 kyber.Point) kyber.Point {
+	E1 := P1.(*Point) //nolint:errcheck // Design pattern to emulate generics
+	E2 := P2.(*Point) //nolint:errcheck // Design pattern to emulate generics
 
 	var t2 cachedGroupElement
 	var r completedGroupElement
@@ -212,25 +212,25 @@ func (P *point) Sub(P1, P2 kyber.Point) kyber.Point {
 	return P
 }
 
-// Neg finds the negative of point A.
+// Neg finds the negative of Point A.
 // For Edwards curves, the negative of (x,y) is (-x,y).
-func (P *point) Neg(A kyber.Point) kyber.Point {
-	P.ge.Neg(&A.(*point).ge)
+func (P *Point) Neg(A kyber.Point) kyber.Point {
+	P.ge.Neg(&A.(*Point).ge)
 	return P
 }
 
-// Mul multiplies point p by scalar s using the repeated doubling method.
-func (P *point) Mul(s kyber.Scalar, A kyber.Point) kyber.Point {
+// Mul multiplies Point p by Scalar s using the repeated doubling method.
+func (P *Point) Mul(s kyber.Scalar, A kyber.Point) kyber.Point {
 
-	a := &s.(*scalar).v
+	a := &s.(*Scalar).v
 
 	if A == nil {
 		geScalarMultBase(&P.ge, a)
 	} else {
 		if P.varTime {
-			geScalarMultVartime(&P.ge, a, &A.(*point).ge)
+			geScalarMultVartime(&P.ge, a, &A.(*Point).ge)
 		} else {
-			geScalarMult(&P.ge, a, &A.(*point).ge)
+			geScalarMult(&P.ge, a, &A.(*Point).ge)
 		}
 	}
 
@@ -247,7 +247,7 @@ func (P *point) Mul(s kyber.Scalar, A kyber.Point) kyber.Point {
 // https://github.com/jedisct1/libsodium/blob/4744636721d2e420f8bbe2d563f31b1f5e682229/src/libsodium/crypto_core/ed25519/ref10/ed25519_ref10.c#L1170
 //
 //nolint:lll // Url above
-func (P *point) HasSmallOrder() bool {
+func (P *Point) HasSmallOrder() bool {
 	s, err := P.MarshalBinary()
 	if err != nil {
 		return false
@@ -285,7 +285,7 @@ func (P *point) HasSmallOrder() bool {
 // because that always returns a value modulo `prime`.
 //
 //nolint:lll // Url above
-func (P *point) IsCanonical(s []byte) bool {
+func (P *Point) IsCanonical(s []byte) bool {
 	if len(s) != 32 {
 		return false
 	}
@@ -302,7 +302,7 @@ func (P *point) IsCanonical(s []byte) bool {
 	return 1-(c&d&1) == 1
 }
 
-func (P *point) Hash(m []byte, dst string) kyber.Point {
+func (P *Point) Hash(m []byte, dst string) kyber.Point {
 	u := hashToField(m, dst, 2)
 	q0 := mapToCurveElligator2Ed25519(u[0])
 	q1 := mapToCurveElligator2Ed25519(u[1])
@@ -480,7 +480,7 @@ func byteXor(dst, b1, b2 []byte) ([]byte, error) {
 	return dst, nil
 }
 
-// curve25519Elligator2 implements a map from fieldElement to a point on Curve25519
+// curve25519Elligator2 implements a map from fieldElement to a Point on Curve25519
 // as defined in section G.2.1. of [RFC9380]
 // [RFC9380]: https://datatracker.ietf.org/doc/html/rfc9380#ell2-opt
 //
@@ -576,7 +576,7 @@ func curve25519Elligator2(u fieldElement) (xn, xd, yn, yd fieldElement) {
 	return xn, xd, y, one
 }
 
-// mapToCurveElligator2Ed25519 implements a map from fieldElement to a point on ed25519
+// mapToCurveElligator2Ed25519 implements a map from fieldElement to a Point on ed25519
 // as defined in section G.2.2. of [RFC9380]
 // [RFC9380]: https://datatracker.ietf.org/doc/html/rfc9380#ell2-opt
 func mapToCurveElligator2Ed25519(u fieldElement) kyber.Point {
@@ -613,7 +613,7 @@ func mapToCurveElligator2Ed25519(u fieldElement) kyber.Point {
 		T: yd,
 	}
 
-	q := new(point)
+	q := new(Point)
 	p.ToExtended(&q.ge)
 
 	return q

@@ -3,7 +3,7 @@ package edwards25519
 // geScalarMultVartime computes h = a*B, where
 //
 //	a = a[0]+256*a[1]+...+256^31 a[31]
-//	B is the Ed25519 base point (x,4/5) with x positive.
+//	B is the Ed25519 base Point (x,4/5) with x positive.
 //
 // Preconditions:
 //
@@ -18,7 +18,7 @@ func geScalarMultVartime(h *extendedGroupElement, a *[32]byte,
 	var r projectiveGroupElement
 	var i int
 
-	// Slide through the scalar exponent clumping sequences of bits,
+	// Slide through the Scalar exponent clumping sequences of bits,
 	// resulting in only zero or odd multipliers between -15 and 15.
 	slide(&aSlide, a)
 

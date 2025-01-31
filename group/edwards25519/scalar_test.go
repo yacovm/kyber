@@ -10,20 +10,20 @@ import (
 	"go.dedis.ch/kyber/v4/util/random"
 )
 
-// SimpleCTScalar implements the scalar operations only using `ScMulAdd` by
+// SimpleCTScalar implements the Scalar operations only using `ScMulAdd` by
 // playing with the parameters.
 type SimpleCTScalar struct {
-	*scalar
+	*Scalar
 }
 
 func newSimpleCTScalar() kyber.Scalar {
-	return &SimpleCTScalar{&scalar{}}
+	return &SimpleCTScalar{&Scalar{}}
 }
 
-var one = new(scalar).SetInt64(1).(*scalar)
-var zero = new(scalar).Zero().(*scalar)
+var one = new(Scalar).SetInt64(1).(*Scalar)
+var zero = new(Scalar).Zero().(*Scalar)
 
-var minusOne = new(scalar).SetBytes([]byte{0xec, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58, 0xd6, 0x9c, 0xf7, 0xa2, 0xde, 0xf9, 0xde, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10}).(*scalar)
+var minusOne = new(Scalar).SetBytes([]byte{0xec, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58, 0xd6, 0x9c, 0xf7, 0xa2, 0xde, 0xf9, 0xde, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10}).(*Scalar)
 
 func (s *SimpleCTScalar) Add(s1, s2 kyber.Scalar) kyber.Scalar {
 	sc1 := s1.(*SimpleCTScalar)
@@ -54,17 +54,17 @@ func (s *SimpleCTScalar) Sub(s1, s2 kyber.Scalar) kyber.Scalar {
 }
 
 func (s *SimpleCTScalar) Equal(s2 kyber.Scalar) bool {
-	return s.scalar.Equal(s2.(*SimpleCTScalar).scalar)
+	return s.Scalar.Equal(s2.(*SimpleCTScalar).Scalar)
 }
 
-// factoredScalar implements the scalar operations using a factored version or
+// factoredScalar implements the Scalar operations using a factored version or
 // `ScReduce` at the end of each operations.
 type factoredScalar struct {
-	*scalar
+	*Scalar
 }
 
 func newFactoredScalar() kyber.Scalar {
-	return &factoredScalar{&scalar{}}
+	return &factoredScalar{&Scalar{}}
 }
 
 func (s *factoredScalar) Add(s1, s2 kyber.Scalar) kyber.Scalar {
@@ -89,7 +89,7 @@ func (s *factoredScalar) Sub(s1, s2 kyber.Scalar) kyber.Scalar {
 }
 
 func (s *factoredScalar) Equal(s2 kyber.Scalar) bool {
-	return s.scalar.Equal(s2.(*factoredScalar).scalar)
+	return s.Scalar.Equal(s2.(*factoredScalar).Scalar)
 }
 
 func TestFactoredScalar(t *testing.T) {
@@ -101,8 +101,8 @@ func TestSimpleCTScalar(t *testing.T) {
 }
 
 func TestString(t *testing.T) {
-	// Create a scalar that would trigger #262.
-	s := new(scalar)
+	// Create a Scalar that would trigger #262.
+	s := new(Scalar)
 	s.SetInt64(0x100)
 	s.Add(s, one)
 	if s.String() != "0101000000000000000000000000000000000000000000000000000000000000" {
@@ -111,12 +111,12 @@ func TestString(t *testing.T) {
 }
 
 func TestScalar_Marshal(t *testing.T) {
-	s := &scalar{}
+	s := &Scalar{}
 	require.Equal(t, "ed.scala", fmt.Sprintf("%s", s.MarshalID()))
 }
 
 func TestSetBytesLE(t *testing.T) {
-	s := new(scalar)
+	s := new(Scalar)
 	s.SetBytes([]byte{0, 1, 2, 3})
 	if s.String() != "0001020300000000000000000000000000000000000000000000000000000000" {
 		t.Fatal("unexpected result from String():", s.String())
@@ -463,7 +463,7 @@ func Test_ScalarIsCanonical(t *testing.T) {
 	}
 
 	expected := []bool{true, true, false, false}
-	scalar := scalar{}
+	scalar := Scalar{}
 
 	// We check in range [L-2, L+4)
 	for i := 0; i < 4; i++ {
