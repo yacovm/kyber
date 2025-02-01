@@ -198,6 +198,18 @@ func (P *Point) Add(P1, P2 kyber.Point) kyber.Point {
 	return P
 }
 
+func (P *Point) AddPlain(P1, P2 *Point) {
+	E1 := P1 //nolint:errcheck // Design pattern to emulate generics
+	E2 := P2 //nolint:errcheck // Design pattern to emulate generics
+
+	var t2 cachedGroupElement
+	var r completedGroupElement
+
+	E2.ge.ToCached(&t2)
+	r.Add(&E1.ge, &t2)
+	r.ToExtended(&P.ge)
+}
+
 func (P *Point) Sub(P1, P2 kyber.Point) kyber.Point {
 	E1 := P1.(*Point) //nolint:errcheck // Design pattern to emulate generics
 	E2 := P2.(*Point) //nolint:errcheck // Design pattern to emulate generics
@@ -235,6 +247,22 @@ func (P *Point) Mul(s kyber.Scalar, A kyber.Point) kyber.Point {
 	}
 
 	return P
+}
+
+// Mul multiplies Point p by Scalar s using the repeated doubling method.
+func (P *Point) MulPlain(s *Scalar, A *Point) {
+
+	a := &s.v
+
+	if A == nil {
+		geScalarMultBase(&P.ge, a)
+	} else {
+		if P.varTime {
+			geScalarMultVartime(&P.ge, a, &A.ge)
+		} else {
+			geScalarMult(&P.ge, a, &A.ge)
+		}
+	}
 }
 
 // HasSmallOrder determines whether the group element has small order

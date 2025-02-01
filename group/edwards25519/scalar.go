@@ -143,6 +143,11 @@ func (s *Scalar) SetBytes(b []byte) kyber.Scalar {
 	return s.setInt(mod.NewIntBytes(b, primeOrder, defaultEndianess))
 }
 
+// SetBytes s to b, interpreted as a little endian integer.
+func (s *Scalar) SetBytesPlain(b []byte) {
+	s.setInt(mod.NewIntBytes(b, primeOrder, defaultEndianess))
+}
+
 // ByteOrder return the byte representation type (big or little endian)
 func (s *Scalar) ByteOrder() kyber.ByteOrder {
 	return defaultEndianess
