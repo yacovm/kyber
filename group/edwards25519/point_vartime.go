@@ -5,5 +5,5 @@ package edwards25519
 // which represent public information. Using variable time algorithms to
 // operate on private information can result in timing side-channels.
 func (P *Point) AllowVarTime(varTime bool) {
-	P.varTime = varTime
+	P.VarTime = varTime
 }

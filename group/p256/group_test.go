@@ -32,7 +32,7 @@ func TestVectors(t *testing.T) {
 	k := big.NewInt(0)
 	s := testP256.Scalar()
 
-	BasePoint := testP256.Point().Base().(*curvePoint)
+	BasePoint := testP256.Point().Base().(*CurvePoint)
 	BasePoint.x.SetString(basePointScalarMult[0].X, 16)
 	BasePoint.y.SetString(basePointScalarMult[0].Y, 16)
 
@@ -42,7 +42,7 @@ func TestVectors(t *testing.T) {
 		require.Equal(t, true, ok)
 		s.SetBytes(k.Bytes())
 
-		Q := testP256.Point().Mul(s, BasePoint).(*curvePoint)
+		Q := testP256.Point().Mul(s, BasePoint).(*CurvePoint)
 		require.Equal(t, strings.ToLower(vec.X), hex.EncodeToString(Q.x.Bytes()))
 		require.Equal(t, strings.ToLower(vec.Y), hex.EncodeToString(Q.y.Bytes()))
 	}

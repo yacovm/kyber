@@ -14,9 +14,9 @@ import (
 	"go.dedis.ch/kyber/v4/xof/blake2xb"
 )
 
-// Suite128 is the suite for P256 curve
+// Suite128 is the suite for P256 Curve
 type Suite128 struct {
-	p256
+	P256
 }
 
 // Hash returns the instance associated with the suite
@@ -50,13 +50,13 @@ func (s *Suite128) New(t reflect.Type) interface{} {
 
 // NewBlakeSHA256P256 returns a cipher suite based on package
 // go.dedis.ch/kyber/v4/xof/blake2xb, SHA-256, and the NIST P-256
-// elliptic curve. It returns random streams from Go's crypto/rand.
+// elliptic Curve. It returns random streams from Go's crypto/rand.
 //
 // The scalars created by this group implement kyber.Scalar's SetBytes
 // method, interpreting the bytes as a big-endian integer, so as to be
 // compatible with the Go standard library's big.Int type.
 func NewBlakeSHA256P256() *Suite128 {
 	suite := new(Suite128)
-	suite.p256.Init()
+	suite.P256.Init()
 	return suite
 }

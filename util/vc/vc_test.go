@@ -2,7 +2,9 @@ package vc
 
 import (
 	"crypto/rand"
-	"go.dedis.ch/kyber/v4/group/edwards25519"
+	"go.dedis.ch/kyber/v4/group/mod"
+	"go.dedis.ch/kyber/v4/group/p256"
+	"math/big"
 	"testing"
 )
 
@@ -33,13 +35,17 @@ func BenchmarkVC(b *testing.B) {
 }
 
 type PublicParams struct {
-	Generators []edwards25519.Point
+	Generators []p256.CurvePoint
 }
 
 func NewPublicParams(n int) PublicParams {
-	suite := edwards25519.SuiteEd25519{}
+	suite := p256.Suite128{}
+	suite.Init()
 
-	generators := make([]edwards25519.Point, n)
+	generators := make([]p256.CurvePoint, n)
+	for i := range generators {
+		generators[i] = suite.PointPlain()
+	}
 
 	randBytes := suite.RandomStream()
 
@@ -53,8 +59,9 @@ func NewPublicParams(n int) PublicParams {
 }
 
 type Commitment struct {
-	generators []edwards25519.Point
-	c          edwards25519.Point
+	generators []p256.CurvePoint
+	c          p256.CurvePoint
+	suite      *p256.Suite128
 }
 
 func Commit(pp PublicParams, xs [][]byte) Commitment {
@@ -66,7 +73,12 @@ func Commit(pp PublicParams, xs [][]byte) Commitment {
 
 	var c Commitment
 	c.generators = pp.Generators
-	c.c = edwards25519.Point{}
+
+	suite := p256.Suite128{}
+	suite.Init()
+	c.suite = &suite
+
+	c.c = suite.PointPlain()
 	c.c.Null()
 
 	for i := 0; i < len(xs); i++ {
@@ -76,30 +88,16 @@ func Commit(pp PublicParams, xs [][]byte) Commitment {
 	return c
 }
 
-func (c Commitment) Sub(i int, x []byte) {
-	if len(x) != 32 {
-		panic("input length must be 32 bytes")
-	}
-
-	var scalar edwards25519.Scalar
-	scalar.SetBytes(x)
-
-	var toAdd edwards25519.Point
-	toAdd.Mul(&scalar, &c.generators[i])
-	toAdd.Neg(&toAdd)
-
-	c.c.Add(&toAdd, &c.c)
-}
-
 func (c Commitment) Add(i int, x []byte) {
 	if len(x) != 32 {
 		panic("input length must be 32 bytes")
 	}
 
-	var scalar edwards25519.Scalar
+	var scalar mod.Int
+	scalar.Init64(1, big.NewInt(1))
 	scalar.SetBytes(x)
 
-	var toAdd edwards25519.Point
+	toAdd := c.suite.PointPlain()
 	toAdd.MulPlain(&scalar, &c.generators[i])
 
 	c.c.AddPlain(&toAdd, &c.c)

@@ -35,7 +35,7 @@ var longDomainSeparator = "H2C-OVERSIZE-DST-"
 
 type Point struct {
 	ge      extendedGroupElement
-	varTime bool
+	VarTime bool
 }
 
 func (P *Point) String() string {
@@ -239,7 +239,7 @@ func (P *Point) Mul(s kyber.Scalar, A kyber.Point) kyber.Point {
 	if A == nil {
 		geScalarMultBase(&P.ge, a)
 	} else {
-		if P.varTime {
+		if P.VarTime {
 			geScalarMultVartime(&P.ge, a, &A.(*Point).ge)
 		} else {
 			geScalarMult(&P.ge, a, &A.(*Point).ge)
@@ -257,7 +257,7 @@ func (P *Point) MulPlain(s *Scalar, A *Point) {
 	if A == nil {
 		geScalarMultBase(&P.ge, a)
 	} else {
-		if P.varTime {
+		if P.VarTime {
 			geScalarMultVartime(&P.ge, a, &A.ge)
 		} else {
 			geScalarMult(&P.ge, a, &A.ge)
